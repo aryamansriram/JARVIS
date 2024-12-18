@@ -1,13 +1,8 @@
-import sys
 from ollama import chat
 from rich import print
-import scipy
-from gtts import gTTS
-import playsound
 import speech_recognition as sr
 
 from tts import get_melo_tts
-
 
 
 def get_stt():
@@ -26,7 +21,11 @@ def get_stt():
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")
     except sr.RequestError as e:
-        print("Could not request results from Google Speech Recognition service; {0}".format(e))
+        print(
+            "Could not request results from Google Speech Recognition service; {0}".format(
+                e
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -41,23 +40,22 @@ if __name__ == "__main__":
     )
     messages.append({"role": "assistant", "content": welcome_message})
 
-    
     get_melo_tts(welcome_message)
-   
+
     while True:
-        print('Say something....')
+        print("Say something....")
         inp = get_stt()
-        print('You: ', inp)
+        print("You: ", inp)
         if inp == "exit":
             break
         messages.append({"role": "user", "content": inp})
 
         stream = chat(model="llama3.2", messages=messages, stream=True)
         out = ""
-        k=0
+        k = 0
         for chunk in stream:
             out += chunk["message"]["content"]
-            k+=1
+            k += 1
             # if k!=0 and k%5==0:
             #     get_melo_tts(out)
             #     out = ""

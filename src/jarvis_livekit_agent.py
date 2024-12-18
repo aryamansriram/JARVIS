@@ -24,7 +24,7 @@ async def entrypoint(ctx: JobContext) -> None:
     participant = await ctx.wait_for_participant()
 
     # run_voice_assistant(ctx)
-    run_agent(ctx, participant, type="VOICE")
+    await run_agent(ctx, participant, type="VOICE")
 
     logger.info("Agent started....")
 
@@ -43,6 +43,7 @@ def run_voice_assistant(ctx: JobContext):
         tts=openai.TTS(),
         chat_ctx=initial_context,
         allow_interruptions=True,
+        interrupt_speech_duration=0.5,
     )
 
     voice_assistant.start(ctx.room)
@@ -52,19 +53,20 @@ def run_voice_assistant(ctx: JobContext):
     )
 
 
-def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMODAL"):
+async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMODAL"):
     initial_context = llm.ChatContext().append(
         role="system",
         text=(
-            "Your name is Jarvis, You are a helpful and polite assistant like Tony Stark's Jarvis."
+            "Your name is Jarvis, You are a helpful and polite personal assistant"
         ),
     )
-    model = openai.realtime.RealtimeModel(
-        instructions="You are a helpful and polite assistant. Answer the user's questions in a friendly and concise manner.",
-        modalities=["audio", "text"],
-    )
+    
 
     if type == "MULTIMODAL":
+        model = openai.realtime.RealtimeModel(
+        instructions="You are a helpful and polite assistant. Answer the user's questions in a friendly and concise manner.",
+        modalities=["audio", "text"],
+        )
         agent = MultimodalAgent(
             model=model,
             chat_ctx=initial_context,
@@ -84,17 +86,29 @@ def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMODAL"):
         session.response.create()
 
     elif type == "VOICE":
+
+        llm_openai = openai.LLM(
+            model='gpt-4o-mini'
+        )
+
         agent = VoicePipelineAgent(
             vad=silero.VAD.load(),
             stt=openai.STT(),
-            llm=openai.LLM(),
+            llm=llm_openai,
             tts=openai.TTS(),
             chat_ctx=initial_context,
             allow_interruptions=True,
+            interrupt_speech_duration=0.5,
         )
 
         agent.start(ctx.room, participant)
 
+        await agent.say(
+            "Hi! I am Jarvis, your own personal assistant. How can I help you today?"
+        )
+
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(
+        WorkerOptions(entrypoint_fnc=entrypoint)
+        )

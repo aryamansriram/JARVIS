@@ -3,3 +3,19 @@ logs/
 
 ### TODOS
 TODO.md
+
+### Audio Files
+audio_files
+
+
+### Checkpoints
+checkpoints_v2/
+
+### Audio Files
+audio_files/
+
+### pycache
+src/__pycache__
+
+### DS_STORE
+.DS_STORE

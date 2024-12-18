@@ -1,30 +1,32 @@
+import sys
 from ollama import chat
 from rich import print
-from transformers import AutoProcessor, BarkModel
 import scipy
 from gtts import gTTS
 import playsound
+import speech_recognition as sr
+
+from tts import get_melo_tts
 
 
-def get_bark_tts(chunk):
-    processor = AutoProcessor.from_pretrained("suno/bark-small")
-    model = BarkModel.from_pretrained("suno/bark-small")
 
-    voice_preset = "v2/en_speaker_6"
+def get_stt():
+    # Initialize the recognizer
+    r = sr.Recognizer()
 
-    inputs = processor(chunk, voice_preset=voice_preset)
+    # Use the default microphone as the audio source
+    with sr.Microphone() as source:
+        print("Say something!")
+        audio = r.listen(source)
 
-    audio_array = model.generate(**inputs)
-    audio_array = audio_array.cpu().numpy().squeeze()
-
-    sample_rate = model.generation_config.sample_rate
-    scipy.io.wavfile.write("bark_out.wav", rate=sample_rate, data=audio_array)
-
-
-def get_gtts(chunk):
-    tts = gTTS(chunk, lang="en")
-    tts.save("audio_files/temp.mp3")
-    playsound.playsound("audio_files/temp.mp3")
+    # Recognize speech using Google Speech Recognition
+    try:
+        text = r.recognize_google(audio)
+        return text
+    except sr.UnknownValueError:
+        print("Google Speech Recognition could not understand audio")
+    except sr.RequestError as e:
+        print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
 
 if __name__ == "__main__":
@@ -39,20 +41,27 @@ if __name__ == "__main__":
     )
     messages.append({"role": "assistant", "content": welcome_message})
 
-    get_gtts(welcome_message)
-
+    
+    get_melo_tts(welcome_message)
+   
     while True:
-        inp = input("You: ")
+        print('Say something....')
+        inp = get_stt()
+        print('You: ', inp)
         if inp == "exit":
             break
         messages.append({"role": "user", "content": inp})
 
         stream = chat(model="llama3.2", messages=messages, stream=True)
         out = ""
+        k=0
         for chunk in stream:
             out += chunk["message"]["content"]
-
-        get_gtts(out)
+            k+=1
+            # if k!=0 and k%5==0:
+            #     get_melo_tts(out)
+            #     out = ""
+        get_melo_tts(out)
 
         messages.append({"role": "assistant", "content": out})
         print("\n")

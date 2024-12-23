@@ -20,5 +20,5 @@ src/__pycache__
 ### DS_STORE
 .DS_STORE
 
-### env file
+## env file
 .env

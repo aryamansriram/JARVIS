@@ -10,6 +10,7 @@ from livekit.agents.multimodal import MultimodalAgent
 from livekit.agents.pipeline import VoicePipelineAgent
 from livekit.agents.voice_assistant import VoiceAssistant
 from livekit.plugins import openai, silero
+from functions import Functions
 
 load_dotenv(dotenv_path=".env")
 logger = logging.getLogger("my-worker")
@@ -42,6 +43,7 @@ def run_voice_assistant(ctx: JobContext):
         llm=openai.LLM(),
         tts=openai.TTS(),
         chat_ctx=initial_context,
+        fnc_ctx=Functions(),
         allow_interruptions=True,
         interrupt_speech_duration=0.5,
     )
@@ -56,16 +58,13 @@ def run_voice_assistant(ctx: JobContext):
 async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMODAL"):
     initial_context = llm.ChatContext().append(
         role="system",
-        text=(
-            "Your name is Jarvis, You are a helpful and polite personal assistant"
-        ),
+        text=("Your name is Jarvis, You are a helpful and polite personal assistant"),
     )
-    
 
     if type == "MULTIMODAL":
         model = openai.realtime.RealtimeModel(
-        instructions="You are a helpful and polite assistant. Answer the user's questions in a friendly and concise manner.",
-        modalities=["audio", "text"],
+            instructions="You are a helpful and polite assistant. Answer the user's questions in a friendly and concise manner.",
+            modalities=["audio", "text"],
         )
         agent = MultimodalAgent(
             model=model,
@@ -86,10 +85,7 @@ async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMO
         session.response.create()
 
     elif type == "VOICE":
-
-        llm_openai = openai.LLM(
-            model='gpt-4o-mini'
-        )
+        llm_openai = openai.LLM(model="gpt-4o-mini")
 
         agent = VoicePipelineAgent(
             vad=silero.VAD.load(),
@@ -97,6 +93,7 @@ async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMO
             llm=llm_openai,
             tts=openai.TTS(),
             chat_ctx=initial_context,
+            fnc_ctx=Functions(),
             allow_interruptions=True,
             interrupt_speech_duration=0.5,
         )
@@ -109,6 +106,4 @@ async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMO
 
 
 if __name__ == "__main__":
-    cli.run_app(
-        WorkerOptions(entrypoint_fnc=entrypoint)
-        )
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))

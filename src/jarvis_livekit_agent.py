@@ -10,7 +10,8 @@ from livekit.agents.multimodal import MultimodalAgent
 from livekit.agents.pipeline import VoicePipelineAgent
 from livekit.agents.voice_assistant import VoiceAssistant
 from livekit.plugins import openai, silero
-from functions import Functions
+#from functions import Functions
+from AgentFunctions import agent_functions
 
 load_dotenv(dotenv_path=".env")
 logger = logging.getLogger("my-worker")
@@ -93,7 +94,7 @@ async def run_agent(ctx: JobContext, participant: rtc.Participant, type="MULTIMO
             llm=llm_openai,
             tts=openai.TTS(),
             chat_ctx=initial_context,
-            fnc_ctx=Functions(),
+            fnc_ctx=agent_functions.Functions(),
             allow_interruptions=True,
             interrupt_speech_duration=0.5,
         )

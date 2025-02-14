@@ -25,3 +25,6 @@ src/__pycache__
 
 ### AgentFunction pycache
 src/AgentFunctions/__pycache__
+
+## data
+data/

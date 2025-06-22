@@ -17,6 +17,7 @@ class CompanyState(TypedDict):
     tools: list
     agent_prompt: str
     agent_messages: list
+    planner_counter: int = 0
 
 
 class AgentState(TypedDict):

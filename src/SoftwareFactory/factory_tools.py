@@ -14,6 +14,7 @@ import os
 from langchain_core.tools import tool
 from loguru import logger
 import subprocess
+from utils import create_handoff_tool
 
 
 @tool
@@ -117,3 +118,11 @@ def run_terminal_command_in_new_terminal(command: str):
         return f"Command '{command}' launched in a new terminal window returned error: {out}"
     else:
         return f"Command '{command}' launched in a new terminal window ran successfully"
+
+
+developer_handoff_tool = create_handoff_tool(
+    next_node="developer", task_description="Assign task to developer"
+)
+tester_handoff_tool = create_handoff_tool(
+    next_node="supervisor", task_description="Send test report to supervisor"
+)

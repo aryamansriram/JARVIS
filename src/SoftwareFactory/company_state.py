@@ -9,15 +9,11 @@ Classes:
 from typing import Annotated, TypedDict
 
 from langgraph.graph import add_messages
+from langgraph.prebuilt.chat_agent_executor import AgentState
 
 
-class CompanyState(TypedDict):
+class CompanyState(AgentState):
     project_requirements: str
-    project_plan: str
-    tools: list
-    agent_prompt: str
-    agent_messages: list
-    planner_counter: int = 0
 
 
 class AgentState(TypedDict):

@@ -8,7 +8,14 @@ Functions:
 
 from langgraph.prebuilt import create_react_agent
 from langchain.prompts import PromptTemplate
-from prompthub import DEVELOPER_PROMPT, DUMMY_TESTER, PLANNER_PROMPT
+from prompthub import (
+    DEVELOPER_PROMPT,
+    DUMMY_TESTER,
+    PLANNER_PROMPT,
+    SUPERVISOR_PROMPT,
+    TEST_GENERATOR_PROMPT,
+    TEST_REPORTER_PROMPT,
+)
 from langchain_core.output_parsers import StrOutputParser
 from operator import itemgetter
 from factory_tools import (
@@ -19,8 +26,8 @@ from factory_tools import (
     read_file,
     delete_file,
     run_terminal_command,
-    run_terminal_command_in_new_terminal,
 )
+from factory_tools import developer_handoff_tool, tester_handoff_tool
 
 
 DEV_TOOLS = [
@@ -33,11 +40,13 @@ DEV_TOOLS = [
 ]
 TESTER_TOOLS = DEV_TOOLS.copy() + [
     run_terminal_command,
-    run_terminal_command_in_new_terminal,
 ]
+TEST_REPORTER_TOOLS = TESTER_TOOLS.copy() + [tester_handoff_tool]
+
+SUPERVISOR_TOOLS = [developer_handoff_tool]
 
 
-def get_coder_agent(llm, project_requirements, project_plan, tools=DEV_TOOLS):
+def get_coder_agent(llm, tools=DEV_TOOLS):
     """
     Creates a coding agent using the specified language model and tools.
 
@@ -53,9 +62,7 @@ def get_coder_agent(llm, project_requirements, project_plan, tools=DEV_TOOLS):
     coder_agent = create_react_agent(
         llm,
         tools=tools,
-        prompt=DEVELOPER_PROMPT.format(
-            project_requirements=project_requirements, project_plan=project_plan
-        ),
+        prompt=DEVELOPER_PROMPT,
     )
     return coder_agent
 
@@ -98,3 +105,28 @@ def get_planner_chain(llm):
         | StrOutputParser()
     )
     return planner_node
+
+
+def get_supervisor_agent(llm, tools=SUPERVISOR_TOOLS):
+    supervisor_agent = create_react_agent(
+        llm, tools=tools, prompt=SUPERVISOR_PROMPT, debug=False, name="supervisor_agent"
+    )
+    return supervisor_agent
+
+
+def get_test_generator_agent(llm, tools=TESTER_TOOLS):
+    tester_agent = create_react_agent(
+        llm,
+        tools=tools,
+        prompt=TEST_GENERATOR_PROMPT,
+    )
+    return tester_agent
+
+
+def get_test_reporter_agent(llm, tools=TESTER_TOOLS):
+    tester_agent = create_react_agent(
+        llm,
+        tools=tools,
+        prompt=TEST_REPORTER_PROMPT,
+    )
+    return tester_agent

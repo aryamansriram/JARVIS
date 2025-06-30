@@ -20,7 +20,6 @@ from factory_tools import (
 from langgraph.graph import StateGraph
 from chains import get_coder_agent, get_supervisor_agent
 from langchain_core.runnables.config import RunnableConfig
-from pprint import pprint
 
 
 class SoftwareFactory:
@@ -44,7 +43,6 @@ class SoftwareFactory:
     def developer_node(self, state: AgentState):
         coder_agent = get_coder_agent(self.llm)
         OUT = coder_agent.invoke(state)
-        # logger.info(f"CODER: MESSAGES: {OUT}")
         return {"messages": OUT["messages"]}
 
     def create_company_graph(self):
@@ -70,26 +68,7 @@ if __name__ == "__main__":
     ]
 
     factory = SoftwareFactory()
-    # for sg,chunk in factory.company_graph.stream(
-    #     AgentState(
-    #         messages=[HumanMessage(content="""
-    #         Create a python script that through terminal arguments
-    #         takes three inputs: Two numbers and one of the following operations:
-    #         1. Add
-    #         2. Subtract
-    #         3. Multiply
-    #         4. Divide
-    #         The script should perform the operation on the two numbers and print the result.
-    #         The script should be written in python and should be named calculator.py
-    #         """)]
-    #     ),
-    #     config=RunnableConfig(recursion_limit=100),
-    #     subgraphs=True,
-    # ):
-    #     print('C: ',chunk)
-    #     print("***************")
-
-    _, out_state = factory.company_graph.invoke(
+    for sg, chunk in factory.company_graph.stream(
         AgentState(
             messages=[
                 HumanMessage(
@@ -100,7 +79,7 @@ if __name__ == "__main__":
             2. Subtract
             3. Multiply
             4. Divide
-            The script should perform the operation on the two numbers and print the result. 
+            The script should perform the operation on the two numbers and print the result.
             The script should be written in python and should be named calculator.py
             """
                 )
@@ -108,5 +87,28 @@ if __name__ == "__main__":
         ),
         config=RunnableConfig(recursion_limit=100),
         subgraphs=True,
-    )
-    pprint([message.content for message in out_state["messages"]])
+    ):
+        print("C: ", chunk)
+        print("***************")
+
+    # _, out_state = factory.company_graph.invoke(
+    #     AgentState(
+    #         messages=[
+    #             HumanMessage(
+    #                 content="""
+    #         Create a python script that through terminal arguments
+    #         takes three inputs: Two numbers and one of the following operations:
+    #         1. Add
+    #         2. Subtract
+    #         3. Multiply
+    #         4. Divide
+    #         The script should perform the operation on the two numbers and print the result.
+    #         The script should be written in python and should be named calculator.py
+    #         """
+    #             )
+    #         ]
+    #     ),
+    #     config=RunnableConfig(recursion_limit=100),
+    #     subgraphs=True,
+    # )
+    # pprint([message.content for message in out_state["messages"]])
